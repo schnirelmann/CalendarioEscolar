@@ -1,5 +1,6 @@
 from event_class import Event
 from datetime import datetime
+from itertools import combinations
 
 def parse_time(time_str):
     """Helper function to parse time from HH:MM format."""
@@ -7,14 +8,14 @@ def parse_time(time_str):
 
 def schedules_collide(schedule1, schedule2):
     """Helper function to check if schedules collide."""
-    day1, time1 = schedule1
-    day2, time2 = schedule2
+    day1, time_range1 = schedule1
+    day2, time_range2 = schedule2
 
     if day1 != day2:
         return False  # Different days, no collision
     
-    start_time1, end_time1 = time1.split('-')
-    start_time2, end_time2 = time2.split('-')
+    start_time1, end_time1 = time_range1.split('-')
+    start_time2, end_time2 = time_range2.split('-')
 
     start_time1 = parse_time(start_time1)
     end_time1 = parse_time(end_time1)
@@ -68,14 +69,42 @@ def can_events_coexist(event1, event2):
 
     return True  # They can coexist if there are no conflicts
 
+def find_conflicting_events(events):
+    """
+    Find pairs of events that cannot coexist and return conflict descriptions.
+
+    Parameters:
+    - events: A list of Event instances.
+
+    Returns:
+    - A list of strings describing which events cannot coexist.
+    """
+    conflicts = []
+    for i, (event1, event2) in enumerate(combinations(events, 2), start=1):
+        if not can_events_coexist(event1, event2):
+            idx1 = events.index(event1) + 1
+            idx2 = events.index(event2) + 1
+            conflicts.append(f"Event {idx1} conflicts with Event {idx2}")
+    return conflicts
+
 # Example usage (for testing)
 if __name__ == "__main__":
+    class Event:
+        def __init__(self, subject, room, professor, schedule, group):
+            self.subject = subject
+            self.room = room
+            self.professor = professor
+            self.schedule = schedule
+            self.group = group
+
+        def __repr__(self):
+            return f"Event(subject={self.subject}, room={self.room}, professor={self.professor}, schedule={self.schedule}, group={self.group})"
 
     event1 = Event(
         subject="Math",
         room="101",
         professor="Antonio",
-        schedule=("Monday", "10:00-11:00"),
+        schedule=("Monday", "09:00-11:00"),
         group="A"
     )
     event2 = Event(
@@ -96,7 +125,7 @@ if __name__ == "__main__":
         subject="Math",
         room="101",
         professor="Antonio",
-        schedule=("Monday", "10:00-11:00"),
+        schedule=("Monday", "09:00-11:00"),
         group="A"
     )
     event5 = Event(
@@ -107,17 +136,12 @@ if __name__ == "__main__":
         group="B"
     )
 
-    # Test cases
-    tests = [
-        (event1, event2, False, "Test1"),
-        (event1, event3, False, "Test2"),
-        (event1, event4, True, "Test3 (identical events)"),
-        (event1, event5, True, "Test4"),
-    ]
+    events = [event1, event2, event3, event4, event5]
 
-    for event1, event2, expected, test_name in tests:
-        result = can_events_coexist(event1, event2)
-        if result == expected:
-            print(f"{test_name}: passed")
-        else:
-            print(f"{test_name}: failed")
+    conflicts = find_conflicting_events(events)
+    if conflicts:
+        print("Conflicting events found:")
+        for conflict in conflicts:
+            print(conflict)
+    else:
+        print("All events can coexist.")
