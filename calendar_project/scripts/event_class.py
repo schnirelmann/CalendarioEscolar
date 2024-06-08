@@ -23,7 +23,7 @@ class Event:
         
         validated_schedule = self._validate_schedule(schedule)
         if validated_schedule is None:
-            raise ValueError(f"Invalid schedule: {schedule}. Must be a tuple (day_of_the_week, time) with time in HH:MM format in 24-hour format")
+            raise ValueError(f"Invalid schedule: {schedule}. Must be a tuple (day_of_the_week, time_range) with time_range in HH:MM-HH:MM format")
 
         self.subject = subject
         self.room = room
@@ -32,16 +32,16 @@ class Event:
         self.group = group
 
     def _validate_schedule(self, schedule):
-        time_pattern = re.compile(r'^([01]\d|2[0-3]):([0-5]\d)$')  # HH:MM format in 24-hour time
+        time_range_pattern = re.compile(r'^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$')  # HH:MM-HH:MM format in 24-hour time
         
         if isinstance(schedule, tuple) and len(schedule) == 2:
-            day, time = schedule
+            day, time_range = schedule
             if day not in DAYS_OF_WEEK:
                 raise ValueError(f"Invalid day: {day}. Must be one of {DAYS_OF_WEEK}")
-            if not isinstance(time, str) or not time_pattern.match(time):
-                raise ValueError(f"Invalid time format: {time}. Must be in HH:MM format in 24-hour format")
+            if not isinstance(time_range, str) or not time_range_pattern.match(time_range):
+                raise ValueError(f"Invalid time range format: {time_range}. Must be in HH:MM-HH:MM format in 24-hour time")
             return schedule
-        raise ValueError(f"Invalid schedule format: {schedule}. Must be a tuple (day_of_the_week, time)")
+        raise ValueError(f"Invalid schedule format: {schedule}. Must be a tuple (day_of_the_week, time_range)")
 
 # Example test cases
 def test_event_creation():
@@ -50,7 +50,7 @@ def test_event_creation():
             subject="Math",
             room="101",
             professor="Antonio",
-            schedule=("Monday", "10:00"),
+            schedule=("Monday", "10:00-11:00"),
             group="A"
         )
         print("Event created successfully")
@@ -63,7 +63,7 @@ def test_invalid_schedule():
             subject="Math",
             room="101",
             professor="Antonio",
-            schedule=("InvalidDay", "25:00"),
+            schedule=("InvalidDay", "25:00-26:00"),
             group="A"
         )
     except ValueError as e:
